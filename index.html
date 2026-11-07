@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>힘과 물체의 운동: 탐구 실험실 & 퍼즐 챌린지</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Phosphor Icons CDN -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Pretendard', sans-serif;
+      user-select: none;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
+
+  <!-- Header & Navigation -->
+  <header class="bg-slate-800/95 backdrop-blur border-b border-slate-700 px-4 py-3 sticky top-0 z-30 shadow-md">
+    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center text-white shadow-lg">
+          <i class="ph-bold ph-wind text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            힘과 물체의 운동
+            <span class="text-xs px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30 font-medium">중학교 과학</span>
+          </h1>
+          <p class="text-xs text-slate-400">알짜힘의 방향에 따른 물체의 운동 상태 변화 스스로 학습하기</p>
+        </div>
+      </div>
+
+      <!-- Mode Toggle Buttons -->
+      <div class="flex bg-slate-900/80 p-1 rounded-xl border border-slate-700/80 text-sm">
+        <button id="tabLabBtn" onclick="switchMode('lab')" class="flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow">
+          <i class="ph-fill ph-flask text-lg"></i>
+          <span>1단계: 가상 탐구 실험실</span>
+        </button>
+        <button id="tabGameBtn" onclick="switchMode('game')" class="flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-white">
+          <i class="ph-fill ph-game-controller text-lg"></i>
+          <span>2단계: 포스 퍼즐 게임</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl w-full mx-auto p-3 md:p-6 flex-grow flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- 1단계: 가상 탁구공 실험실 (Interactive Lab) -->
+    <!-- ========================================== -->
+    <section id="labSection" class="flex flex-col lg:flex-row gap-5 flex-grow">
+      
+      <!-- Canvas Simulation View -->
+      <div class="flex-1 flex flex-col bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700/80 mb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+            <span class="font-semibold text-slate-200 text-sm md:text-base">탁구공 운동 시뮬레이션</span>
+          </div>
+          <div class="flex items-center gap-3 text-xs text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-emerald-400 rounded"></span> 운동 방향 (속도)</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-1 bg-rose-500 rounded"></span> 힘의 방향 (선풍기 바람)</span>
+          </div>
+        </div>
+
+        <!-- Simulation Canvas -->
+        <div class="relative w-full aspect-video md:aspect-[16/9] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <canvas id="labCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+          <!-- Lab Interactive Guide Overlay -->
+          <div id="labTouchHint" class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-full border border-sky-500/40 text-xs text-sky-200 pointer-events-none shadow-lg flex items-center gap-2">
+            <i class="ph-bold ph-hand-pointing animate-bounce text-sky-400"></i>
+            <span>선풍기를 드래그해 이동하고, 동그란 ↻ 조절점을 돌려 바람 방향을 바꿔보세요!</span>
+          </div>
+        </div>
+
+        <!-- Canvas Controls -->
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+          <div class="flex items-center gap-2">
+            <button id="labPlayBtn" onclick="toggleLabPlay()" class="px-5 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition">
+              <i class="ph-fill ph-play text-lg"></i>
+              <span>공 굴리기 (출발)</span>
+            </button>
+            <button onclick="resetLab()" class="px-4 py-2.5 rounded-xl font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-1.5 active:scale-95 transition">
+              <i class="ph-bold ph-arrow-counter-clockwise"></i>
+              <span>다시하기</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <label class="flex items-center gap-1.5 text-slate-300 cursor-pointer">
+              <input type="checkbox" id="labStrobeCheck" checked class="rounded bg-slate-800 border-slate-600 text-sky-500 focus:ring-0">
+              다중 섬광 잔상 표시 (시간 기록 타이머)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lab Right Sidebar: Presets & Controls -->
+      <div class="w-full lg:w-96 flex flex-col gap-4">
+        
+        <!-- Preset Investigation Card (학생이 직접 선택하는 자기주도 탐구 카드) -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-700 mb-2">
+            <div class="flex items-center gap-2 text-sky-400 font-bold">
+              <i class="ph-fill ph-clipboard-text text-xl"></i>
+              <h3>교과서 핵심 3가지 힘 실험 & 관찰</h3>
+            </div>
+          </div>
+          <p class="text-xs text-slate-400 mb-3">선풍기를 자유롭게 조작하여 실험해 본 후, 관찰한 결과를 직접 선택해 보세요!</p>
+
+          <div class="space-y-3">
+            <!-- Case 1: 나란 (순방향) -->
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 font-mono">1</span>
+                  운동 방향과 힘의 방향이 나란할 때 (순방향)
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">속력 변화</span>
+                  <select id="ans-speed-1" onchange="checkAnswer(1)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-sky-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed_faster">변함(빨라짐)</option>
+                    <option value="changed_slower">변함(느려짐)</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">방향 변화</span>
+                  <select id="ans-dir-1" onchange="checkAnswer(1)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-sky-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+              </div>
+              <div id="feedback-1" class="hidden text-[11px] font-semibold px-2 py-1 rounded bg-slate-800 flex items-center gap-1.5"></div>
+            </div>
+
+            <!-- Case 2: 반대 (역방향) -->
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono">2</span>
+                  운동 방향과 힘의 방향이 반대일 때 (역방향)
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">속력 변화</span>
+                  <select id="ans-speed-2" onchange="checkAnswer(2)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-amber-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed_faster">변함(빨라짐)</option>
+                    <option value="changed_slower">변함(느려짐)</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">방향 변화</span>
+                  <select id="ans-dir-2" onchange="checkAnswer(2)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-amber-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+              </div>
+              <div id="feedback-2" class="hidden text-[11px] font-semibold px-2 py-1 rounded bg-slate-800 flex items-center gap-1.5"></div>
+            </div>
+
+            <!-- Case 3: 수직 -->
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 font-mono">3</span>
+                  운동 방향과 힘의 방향이 수직일 때
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">속력 변화</span>
+                  <select id="ans-speed-3" onchange="checkAnswer(3)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-purple-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">방향 변화</span>
+                  <select id="ans-dir-3" onchange="checkAnswer(3)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-purple-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+              </div>
+              <div id="feedback-3" class="hidden text-[11px] font-semibold px-2 py-1 rounded bg-slate-800 flex items-center gap-1.5"></div>
+            </div>
+
+            <!-- Case 4: 비스듬 -->
+            <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span class="px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-400 font-mono">4</span>
+                  운동 방향과 힘의 방향이 비스듬할 때
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 text-[11px]">
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">속력 변화</span>
+                  <select id="ans-speed-4" onchange="checkAnswer(4)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-pink-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+                <div class="bg-slate-800/80 p-1.5 rounded-lg border border-slate-700">
+                  <span class="text-slate-400 block mb-1">방향 변화</span>
+                  <select id="ans-dir-4" onchange="checkAnswer(4)" class="w-full bg-slate-900 text-slate-200 rounded px-1.5 py-1 text-[11px] border border-slate-700 focus:border-pink-500 outline-none">
+                    <option value="">선택하세요</option>
+                    <option value="changed">변함</option>
+                    <option value="unchanged">변하지 않음</option>
+                  </select>
+                </div>
+              </div>
+              <div id="feedback-4" class="hidden text-[11px] font-semibold px-2 py-1 rounded bg-slate-800 flex items-center gap-1.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Wind Setting Controls -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl">
+          <div class="text-sm font-bold text-slate-200 mb-3 flex items-center justify-between">
+            <span>선풍기 세부 설정</span>
+            <span id="angleValueDisplay" class="text-xs font-mono text-sky-400 bg-sky-950/60 px-2 py-0.5 rounded border border-sky-800">각도: 90°</span>
+          </div>
+
+          <!-- Angle Slider -->
+          <div class="mb-3">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>바람 각도 (화면 직접 회전도 가능)</span>
+              <span id="angleDetail">수직 아래 (90°)</span>
+            </div>
+            <input type="range" id="fanAngleSlider" min="0" max="360" value="90" class="w-full accent-sky-500 bg-slate-700 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Force Magnitude -->
+          <div class="mb-3">
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>바람 세기 (알짜힘 크기)</span>
+              <span id="forceValueDisplay" class="font-mono text-rose-400">7 N</span>
+            </div>
+            <input type="range" id="fanForceSlider" min="0" max="20" value="7" class="w-full accent-rose-500 bg-slate-700 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Quick Move Helper -->
+          <div class="pt-2 border-t border-slate-700 flex items-center justify-between text-xs">
+            <span class="text-slate-400">선풍기 기본 위치</span>
+            <button onclick="resetLabFanPos()" class="px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-sky-300 font-medium transition">
+              중앙 복귀
+            </button>
+          </div>
+        </div>
+
+        <!-- Concept Summary Card -->
+        <div class="bg-gradient-to-br from-indigo-950/60 to-slate-800 rounded-2xl border border-indigo-500/30 p-4 text-xs text-slate-300">
+          <h4 class="font-bold text-indigo-300 mb-1.5 flex items-center gap-1.5">
+            <i class="ph-bold ph-lightbulb"></i>
+            스스로 발견한 과학 원리
+          </h4>
+          <ul class="space-y-1 text-slate-300 leading-relaxed list-disc list-inside">
+            <li><b>나란한 힘:</b> 운동 방향과 같으면 빨라지고, 반대면 느려집니다. (속력만 변함)</li>
+            <li><b>수직인 힘:</b> 공을 옆으로 밀어 궤적의 <b>운동 방향만 변함 (속력 일정)</b>.</li>
+            <li><b>비스듬한 힘:</b> <b>속력과 운동 방향이 모두 변함</b>.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2단계: 포스 퍼즐 게임 (Force Puzzle Game) -->
+    <!-- ========================================== -->
+    <section id="gameSection" class="hidden flex flex-col lg:flex-row gap-5 flex-grow">
+      
+      <!-- Game Canvas Window -->
+      <div class="flex-1 flex flex-col bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-700/80 mb-3">
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-bold uppercase tracking-wider">
+              Stage <span id="gameStageNum">1</span>
+            </span>
+            <h2 id="gameStageTitle" class="font-bold text-slate-100 text-sm md:text-base">직각 코너링</h2>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-400">설치된 선풍기:</span>
+            <span id="fanCountBadge" class="font-mono text-indigo-400 font-bold bg-indigo-950/60 px-2.5 py-0.5 rounded border border-indigo-800 text-xs">0 / 5대</span>
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="relative w-full aspect-video md:aspect-[16/9] bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
+          <canvas id="gameCanvas" class="w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+          <!-- Interactive Force Placement Prompt -->
+          <div id="gameInstructionOverlay" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur px-4 py-2 rounded-full border border-indigo-500/40 text-xs text-indigo-200 pointer-events-none shadow-xl flex items-center gap-2">
+            <i class="ph-bold ph-hand-pointing animate-bounce text-indigo-400 text-base"></i>
+            <span id="gameHelpPrompt">[선풍기 추가하기] 버튼으로 선풍기(최대 5대)를 배치하고 ↻ 노브를 돌려 골대로 인도하세요!</span>
+          </div>
+
+          <!-- Mission Result Modal Overlay -->
+          <div id="gameResultModal" class="hidden absolute inset-0 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 z-20">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-sm w-full text-center shadow-2xl">
+              <div id="modalIconWrap" class="w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center text-3xl">
+                <!-- Icon injected by JS -->
+              </div>
+              <h3 id="modalTitle" class="text-xl font-bold mb-2">미션 완료!</h3>
+              <p id="modalDesc" class="text-xs text-slate-300 leading-relaxed mb-5">탁구공을 무사히 골대에 골인시켰습니다!</p>
+              
+              <div class="flex gap-2 justify-center">
+                <button id="modalRetryBtn" onclick="restartCurrentStage()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-200 transition">
+                  다시 도전
+                </button>
+                <button id="modalNextBtn" onclick="nextStage()" class="px-5 py-2 rounded-xl text-xs font-bold bg-indigo-500 hover:bg-indigo-600 text-white transition shadow-lg shadow-indigo-500/30">
+                  다음 단계로 ➔
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Controls Bar -->
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700/60">
+          <div class="flex items-center gap-2">
+            <button id="gameStartBtn" onclick="toggleGameLaunch()" class="px-5 py-2.5 rounded-xl font-bold bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95 transition">
+              <i class="ph-fill ph-paper-plane-tilt text-lg"></i>
+              <span>공 발사하기!</span>
+            </button>
+            <button onclick="addGameFan()" id="addFanBtn" class="px-4 py-2.5 rounded-xl font-bold bg-sky-600 hover:bg-sky-500 text-white flex items-center gap-1.5 active:scale-95 transition shadow-lg shadow-sky-600/20">
+              <i class="ph-bold ph-plus-circle text-lg"></i>
+              <span>선풍기 추가하기 (최대 5개)</span>
+            </button>
+            <button onclick="resetGameStage()" class="px-3.5 py-2.5 rounded-xl font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center gap-1.5 active:scale-95 transition">
+              <i class="ph-bold ph-arrow-counter-clockwise"></i>
+              <span>공 재장전</span>
+            </button>
+          </div>
+
+          <!-- 5 Stages Navigation -->
+          <div class="flex items-center gap-1 text-xs">
+            <button onclick="selectStage(1)" class="stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500">1단계</button>
+            <button onclick="selectStage(2)" class="stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500">2단계</button>
+            <button onclick="selectStage(3)" class="stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500">3단계</button>
+            <button onclick="selectStage(4)" class="stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500">4단계</button>
+            <button onclick="selectStage(5)" class="stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500">5단계</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game Stage Mission Sidebar -->
+      <div class="w-full lg:w-96 flex flex-col gap-4">
+        
+        <!-- Interactive Controls Guide -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl">
+          <div class="flex items-center justify-between text-indigo-400 font-bold mb-3 pb-2 border-b border-slate-700">
+            <div class="flex items-center gap-2">
+              <i class="ph-bold ph-sliders-horizontal text-xl"></i>
+              <h3>선풍기 설치 & 조작 (최대 5대)</h3>
+            </div>
+            <button onclick="clearAllGameFans()" class="text-[11px] px-2 py-0.5 rounded bg-slate-700 text-rose-300 hover:bg-rose-950 hover:text-rose-200 border border-slate-600 transition">
+              전체 제거
+            </button>
+          </div>
+          <div class="space-y-2 text-xs text-slate-300">
+            <div class="flex items-start gap-2.5 p-2 rounded-xl bg-slate-900/80 border border-slate-700/60">
+              <div class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-sm shrink-0">1</div>
+              <div>
+                <b class="text-white">선풍기 추가 & 이동</b>
+                <p class="text-slate-400 text-[11px] mt-0.5">[선풍기 추가하기]로 최대 5대까지 배치하고, 드래그로 원하는 위치에 자유롭게 놓으세요.</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-2.5 p-2 rounded-xl bg-slate-900/80 border border-slate-700/60">
+              <div class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-sm shrink-0">2</div>
+              <div>
+                <b class="text-white">360° 회전 및 삭제</b>
+                <p class="text-slate-400 text-[11px] mt-0.5">선풍기 앞 ↻ 노브로 원하는 각도를 맞추고, 필요 없으면 선풍기 옆 빨간 ✕ 버튼을 누르세요.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stage Mission Guide -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700 p-4 shadow-xl flex-grow flex flex-col justify-between">
+          <div>
+            <div class="flex items-center gap-2 text-amber-400 font-bold mb-2">
+              <i class="ph-fill ph-target text-lg"></i>
+              <h4 id="gameMissionTitle" class="text-sm">현재 미션 안내</h4>
+            </div>
+            <p id="gameMissionDescription" class="text-xs text-slate-300 leading-relaxed mb-3">
+              벽에 부딪히지 않고 선풍기 바람을 활용하여 녹색 골대 안으로 탁구공을 골인시키세요!
+            </p>
+
+            <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700 text-xs space-y-2">
+              <div class="text-slate-400 font-semibold flex items-center gap-1.5">
+                <i class="ph-bold ph-lightbulb text-indigo-400"></i> 검증된 해결 전략:
+              </div>
+              <p id="gameStageDetail" class="text-slate-300 text-[11px] leading-relaxed">
+                모든 단계는 최대 5대 이내의 선풍기를 알맞게 배치하여 100% 클리어할 수 있도록 설계되었습니다.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-700 flex items-center justify-between text-xs text-slate-400">
+            <span>위치와 각도를 연구한 뒤 [공 발사하기]를 누르세요.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-slate-900/90 border-t border-slate-800 px-4 py-2.5 text-center text-xs text-slate-500">
+    <span>중학교 과학 &middot; V. 힘의 작용 - 힘이 작용할 때 물체의 운동 &middot; 인터랙티브 학습 플랫폼</span>
+  </footer>
+
+  <!-- Sound effect synthesizer via Web Audio API -->
+  <script>
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function playBeep(freq = 440, type = 'sine', duration = 0.12) {
+      try {
+        if (!audioCtx) audioCtx = new AudioContextClass();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch(e) {}
+    }
+  </script>
+
+  <!-- Simulation & Game JavaScript Core Engine -->
+  <script>
+    /* ========================================================================
+       Global State & Tab Navigation
+       ======================================================================== */
+    let currentMode = 'lab'; // 'lab' or 'game'
+
+    function switchMode(mode) {
+      currentMode = mode;
+      const labSec = document.getElementById('labSection');
+      const gameSec = document.getElementById('gameSection');
+      const tabLab = document.getElementById('tabLabBtn');
+      const tabGame = document.getElementById('tabGameBtn');
+
+      if (mode === 'lab') {
+        labSec.classList.remove('hidden');
+        gameSec.classList.add('hidden');
+        tabLab.className = 'flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 bg-sky-600 text-white shadow';
+        tabGame.className = 'flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-white';
+        resizeCanvas(labCanvas);
+      } else {
+        labSec.classList.add('hidden');
+        gameSec.classList.remove('hidden');
+        tabLab.className = 'flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 text-slate-400 hover:text-white';
+        tabGame.className = 'flex items-center gap-2 px-4 py-1.5 rounded-lg font-semibold transition-all duration-200 bg-indigo-600 text-white shadow';
+        resizeCanvas(gameCanvas);
+        resetGameStage();
+      }
+    }
+
+    function resizeCanvas(canvas) {
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
+    }
+
+    window.addEventListener('resize', () => {
+      if (currentMode === 'lab') resizeCanvas(labCanvas);
+      else resizeCanvas(gameCanvas);
+    });
+
+    /* ========================================================================
+       MODE 1: 가상 탁구공 실험실 (Interactive Lab)
+       ======================================================================== */
+    const labCanvas = document.getElementById('labCanvas');
+    const labCtx = labCanvas.getContext('2d');
+
+    let labRunning = false;
+    let labBall = {
+      x: 70,
+      y: 200,
+      vx: 4.0,
+      vy: 0.0,
+      radius: 14,
+      history: [] // 다중 섬광 잔상 및 속력 기록
+    };
+
+    let labFan = {
+      x: 320,
+      y: 110,
+      radius: 26,
+      rotateHandleRadius: 9,
+      handleDist: 48,
+      angleDeg: 90,     // 0 = right, 90 = down, 180 = left, 270 = up
+      forceMag: 7,      // 기본 7N
+      windRange: 190,
+      windSpreadDeg: 55
+    };
+
+    let labDraggingFan = false;
+    let labDraggingRotator = false;
+    let labTick = 0;
+
+    function initLab() {
+      resizeCanvas(labCanvas);
+      resetLabFanPos();
+      resetLab();
+      attachLabInteractions();
+      requestAnimationFrame(labLoop);
+    }
+
+    function resetLabFanPos() {
+      const rect = labCanvas.parentElement.getBoundingClientRect();
+      labFan.x = rect.width ? rect.width * 0.45 : 320;
+      labFan.y = 90;
+    }
+
+    function toggleLabPlay() {
+      const btn = document.getElementById('labPlayBtn');
+      labRunning = !labRunning;
+      if (labRunning) {
+        btn.innerHTML = `<i class="ph-fill ph-pause text-lg"></i><span>일시정지</span>`;
+        btn.className = "px-5 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition";
+        playBeep(520, 'sine', 0.1);
+      } else {
+        btn.innerHTML = `<i class="ph-fill ph-play text-lg"></i><span>공 굴리기 (계속)</span>`;
+        btn.className = "px-5 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition";
+      }
+    }
+
+    function resetLab() {
+      labRunning = false;
+      const rect = labCanvas.parentElement.getBoundingClientRect();
+      labBall.x = 70;
+      labBall.y = rect.height / 2;
+      labBall.vx = 4.0;
+      labBall.vy = 0.0;
+      labBall.history = [];
+      labTick = 0;
+
+      const btn = document.getElementById('labPlayBtn');
+      btn.innerHTML = `<i class="ph-fill ph-play text-lg"></i><span>공 굴리기 (출발)</span>`;
+      btn.className = "px-5 py-2.5 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition";
+    }
+
+    /* 자가 진단 정답 체크 로직 */
+    const correctAnswers = {
+      1: { speed: 'changed_faster', dir: 'unchanged', text: '정답! 나란한 순방향 힘은 속력이 변함(빨라짐)이고 방향은 변하지 않습니다.' },
+      2: { speed: 'changed_slower', dir: 'unchanged', text: '정답! 반대 방향 힘(마찰력)은 속력이 변함(느려짐)이고 방향은 변하지 않습니다.' },
+      3: { speed: 'unchanged', dir: 'changed', text: '정답! 수직인 힘은 속력은 변하지 않고 운동 방향만 변합니다.' },
+      4: { speed: 'changed', dir: 'changed', text: '정답! 비스듬한 힘은 속력과 운동 방향이 모두 변합니다.' }
+    };
+
+    function checkAnswer(caseNum) {
+      const sp = document.getElementById(`ans-speed-${caseNum}`).value;
+      const di = document.getElementById(`ans-dir-${caseNum}`).value;
+      const fb = document.getElementById(`feedback-${caseNum}`);
+      if (!fb) return;
+
+      if (!sp || !di) {
+        fb.classList.add('hidden');
+        return;
+      }
+
+      const target = correctAnswers[caseNum];
+      fb.classList.remove('hidden');
+
+      if (sp === target.speed && di === target.dir) {
+        fb.className = 'text-[11px] font-semibold px-2 py-1.5 rounded bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 flex items-center gap-1.5';
+        fb.innerHTML = `<i class="ph-bold ph-check-circle text-emerald-400 text-sm"></i> <span>${target.text}</span>`;
+        playBeep(660, 'sine', 0.15);
+      } else {
+        fb.className = 'text-[11px] font-semibold px-2 py-1.5 rounded bg-rose-950/80 border border-rose-500/50 text-rose-300 flex items-center gap-1.5';
+        fb.innerHTML = `<i class="ph-bold ph-x-circle text-rose-400 text-sm"></i> <span>공의 잔상 간격과 진행 방향을 다시 관찰해 보세요!</span>`;
+        playBeep(220, 'square', 0.15);
+      }
+    }
+
+    function syncLabControlsDisplay() {
+      const angleVal = document.getElementById('angleValueDisplay');
+      const angleDetail = document.getElementById('angleDetail');
+      const forceVal = document.getElementById('forceValueDisplay');
+
+      if (angleVal) angleVal.innerText = `각도: ${labFan.angleDeg}°`;
+      if (forceVal) forceVal.innerText = `${labFan.forceMag} N`;
+
+      let detail = '비스듬한 방향';
+      const a = labFan.angleDeg;
+      if (a === 0 || a === 360) detail = '운동 방향과 나란 (오른쪽)';
+      else if (a === 180) detail = '운동 방향과 반대 (왼쪽)';
+      else if (a === 90) detail = '수직 아래 (90°)';
+      else if (a === 270) detail = '수직 위 (270°)';
+      if (angleDetail) angleDetail.innerText = detail;
+    }
+
+    document.getElementById('fanAngleSlider').addEventListener('input', (e) => {
+      labFan.angleDeg = parseInt(e.target.value, 10);
+      syncLabControlsDisplay();
+    });
+    document.getElementById('fanForceSlider').addEventListener('input', (e) => {
+      labFan.forceMag = parseInt(e.target.value, 10);
+      syncLabControlsDisplay();
+    });
+
+    function attachLabInteractions() {
+      function getCanvasCoord(e) {
+        const rect = labCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function getHandlePos() {
+        const rad = (labFan.angleDeg * Math.PI) / 180;
+        return {
+          x: labFan.x + Math.cos(rad) * labFan.handleDist,
+          y: labFan.y + Math.sin(rad) * labFan.handleDist
+        };
+      }
+
+      function onDown(e) {
+        const pos = getCanvasCoord(e);
+        const handle = getHandlePos();
+
+        if (Math.hypot(pos.x - handle.x, pos.y - handle.y) <= labFan.rotateHandleRadius + 10) {
+          labDraggingRotator = true;
+          e.preventDefault();
+          return;
+        }
+
+        if (Math.hypot(pos.x - labFan.x, pos.y - labFan.y) <= labFan.radius + 6) {
+          labDraggingFan = true;
+          e.preventDefault();
+        }
+      }
+
+      function onMove(e) {
+        if (!labDraggingFan && !labDraggingRotator) return;
+        const pos = getCanvasCoord(e);
+        e.preventDefault();
+
+        if (labDraggingRotator) {
+          const dx = pos.x - labFan.x;
+          const dy = pos.y - labFan.y;
+          let deg = Math.round((Math.atan2(dy, dx) * 180) / Math.PI);
+          if (deg < 0) deg += 360;
+
+          if (Math.abs(deg - 0) < 6 || Math.abs(deg - 360) < 6) deg = 0;
+          else if (Math.abs(deg - 90) < 6) deg = 90;
+          else if (Math.abs(deg - 180) < 6) deg = 180;
+          else if (Math.abs(deg - 270) < 6) deg = 270;
+
+          labFan.angleDeg = deg;
+          document.getElementById('fanAngleSlider').value = deg;
+          syncLabControlsDisplay();
+        } else if (labDraggingFan) {
+          const rect = labCanvas.parentElement.getBoundingClientRect();
+          labFan.x = Math.max(30, Math.min(rect.width - 30, pos.x));
+          labFan.y = Math.max(30, Math.min(rect.height - 30, pos.y));
+        }
+      }
+
+      function onUp() {
+        labDraggingFan = false;
+        labDraggingRotator = false;
+      }
+
+      labCanvas.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+
+      labCanvas.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onUp);
+    }
+
+    function labLoop() {
+      const rect = labCanvas.parentElement.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+
+      labCtx.clearRect(0, 0, width, height);
+
+      // Grid Lines
+      labCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+      labCtx.lineWidth = 1;
+      const step = 40;
+      for (let x = 0; x < width; x += step) {
+        labCtx.beginPath();
+        labCtx.moveTo(x, 0);
+        labCtx.lineTo(x, height);
+        labCtx.stroke();
+      }
+      for (let y = 0; y < height; y += step) {
+        labCtx.beginPath();
+        labCtx.moveTo(0, y);
+        labCtx.lineTo(width, y);
+        labCtx.stroke();
+      }
+
+      // Wind Vector Geometry
+      const rad = (labFan.angleDeg * Math.PI) / 180;
+      const fx = Math.cos(rad);
+      const fy = Math.sin(rad);
+
+      const toBallX = labBall.x - labFan.x;
+      const toBallY = labBall.y - labFan.y;
+      const ballDist = Math.hypot(toBallX, toBallY);
+      let inWindZone = false;
+
+      if (ballDist > 0 && ballDist <= labFan.windRange + labBall.radius) {
+        const ballAngle = Math.atan2(toBallY, toBallX);
+        let diffAngle = Math.abs(ballAngle - rad);
+        while (diffAngle > Math.PI) diffAngle = Math.abs(diffAngle - 2 * Math.PI);
+        const spreadRad = (labFan.windSpreadDeg / 2 * Math.PI) / 180;
+        if (diffAngle <= spreadRad) {
+          inWindZone = true;
+        }
+      }
+
+      // Wind Cone Drawing
+      if (labFan.forceMag > 0) {
+        labCtx.save();
+        const halfSpread = (labFan.windSpreadDeg / 2 * Math.PI) / 180;
+        
+        const coneGrad = labCtx.createRadialGradient(
+          labFan.x, labFan.y, 10,
+          labFan.x, labFan.y, labFan.windRange
+        );
+        coneGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+        coneGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
+        coneGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+        labCtx.fillStyle = coneGrad;
+        labCtx.beginPath();
+        labCtx.moveTo(labFan.x, labFan.y);
+        labCtx.arc(labFan.x, labFan.y, labFan.windRange, rad - halfSpread, rad + halfSpread);
+        labCtx.closePath();
+        labCtx.fill();
+
+        labCtx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        labCtx.lineWidth = 1.6;
+        for (let i = 0; i < 4; i++) {
+          const arcDist = ((Date.now() / 8 + i * 45) % labFan.windRange);
+          labCtx.beginPath();
+          labCtx.arc(labFan.x, labFan.y, arcDist, rad - halfSpread * 0.7, rad + halfSpread * 0.7);
+          labCtx.stroke();
+        }
+        labCtx.restore();
+      }
+
+      // Physical Update
+      if (labRunning) {
+        labTick++;
+
+        // 첫 번째 기준 잔상 기록 (4.0 m/s)
+        if (labBall.history.length === 0) {
+          labBall.history.push({
+            x: labBall.x,
+            y: labBall.y,
+            vx: labBall.vx,
+            vy: labBall.vy,
+            speed: Math.hypot(labBall.vx, labBall.vy)
+          });
+        }
+
+        if (inWindZone && labFan.forceMag > 0) {
+          const currentSpeed = Math.hypot(labBall.vx, labBall.vy);
+          if (currentSpeed > 0.001) {
+            const currentAngle = Math.atan2(labBall.vy, labBall.vx);
+            const windAngle = rad;
+
+            let delta = windAngle - currentAngle;
+            while (delta > Math.PI) delta -= 2 * Math.PI;
+            while (delta < -Math.PI) delta += 2 * Math.PI;
+
+            const absDeltaDeg = Math.abs(delta * 180 / Math.PI);
+            const fanAngle = labFan.angleDeg % 360;
+            const isPerpendicularFan = (Math.abs(fanAngle - 90) <= 10) || (Math.abs(fanAngle - 270) <= 10);
+            const isOpposingWind = Math.cos(windAngle) < -0.15;
+
+            let fParallelCos = Math.cos(delta);
+            const fPerpSin = Math.sin(delta);
+
+            if (isPerpendicularFan || (absDeltaDeg >= 80 && absDeltaDeg <= 100)) {
+              fParallelCos = 0; // 수직 힘 작용 시 속력 완벽 불변
+            } else if (isOpposingWind) {
+              fParallelCos = Math.min(-0.25, Math.cos(windAngle)); // 마주보는 비스듬한 바람 시 일관된 감속
+            }
+
+            const speedAccelScale = 0.008;
+            let newSpeed = currentSpeed + fParallelCos * labFan.forceMag * speedAccelScale;
+            if (isPerpendicularFan) {
+              newSpeed = 4.0; // 엄격한 4.0 m/s 불변 유지
+            } else if (newSpeed < 0.3) {
+              newSpeed = 0.3;
+            }
+
+            const turnAngleScale = 0.004;
+            const newAngle = currentAngle + fPerpSin * labFan.forceMag * turnAngleScale;
+
+            labBall.vx = Math.cos(newAngle) * newSpeed;
+            labBall.vy = Math.sin(newAngle) * newSpeed;
+          }
+        }
+
+        labBall.x += labBall.vx;
+        labBall.y += labBall.vy;
+
+        const currentSpeedNow = Math.hypot(labBall.vx, labBall.vy);
+
+        if (labTick % 14 === 0) {
+          labBall.history.push({
+            x: labBall.x,
+            y: labBall.y,
+            vx: labBall.vx,
+            vy: labBall.vy,
+            speed: currentSpeedNow
+          });
+        }
+
+        if (labBall.x > width + 40 || labBall.x < -40 || labBall.y > height + 40 || labBall.y < -40) {
+          labRunning = false;
+          document.getElementById('labPlayBtn').innerHTML = `<i class="ph-fill ph-arrow-counter-clockwise text-lg"></i><span>다시하기</span>`;
+        }
+      }
+
+      // Draw Strobe Flash Ghosts with clearly labeled speeds under each ghost
+      const showStrobe = document.getElementById('labStrobeCheck').checked;
+      if (showStrobe && labBall.history.length > 0) {
+        labBall.history.forEach((pos, idx) => {
+          labCtx.beginPath();
+          labCtx.arc(pos.x, pos.y, labBall.radius - 2, 0, Math.PI * 2);
+          labCtx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+          labCtx.fill();
+          labCtx.strokeStyle = 'rgba(245, 158, 11, 0.7)';
+          labCtx.lineWidth = 1.2;
+          labCtx.stroke();
+
+          labCtx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          labCtx.font = 'bold 9px monospace';
+          labCtx.textAlign = 'center';
+          labCtx.fillText(idx + 1, pos.x, pos.y + 3);
+
+          const speedText = (pos.speed || 0).toFixed(1) + ' m/s';
+          labCtx.font = 'bold 10px Pretendard, monospace';
+          const textWidth = labCtx.measureText(speedText).width;
+
+          labCtx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+          labCtx.beginPath();
+          labCtx.roundRect(pos.x - textWidth / 2 - 4, pos.y + labBall.radius + 3, textWidth + 8, 14, 3);
+          labCtx.fill();
+          labCtx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+          labCtx.lineWidth = 1;
+          labCtx.stroke();
+
+          labCtx.fillStyle = '#fde68a';
+          labCtx.fillText(speedText, pos.x, pos.y + labBall.radius + 14);
+        });
+      }
+
+      // Draw Pingpong Ball
+      labCtx.save();
+      labCtx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+      labCtx.shadowBlur = 12;
+      labCtx.beginPath();
+      labCtx.arc(labBall.x, labBall.y, labBall.radius, 0, Math.PI * 2);
+      const grad = labCtx.createRadialGradient(
+        labBall.x - 4, labBall.y - 4, 2,
+        labBall.x, labBall.y, labBall.radius
+      );
+      grad.addColorStop(0, '#fef3c7');
+      grad.addColorStop(0.7, '#f59e0b');
+      grad.addColorStop(1, '#b45309');
+      labCtx.fillStyle = grad;
+      labCtx.fill();
+      labCtx.restore();
+
+      // Motion Vector Arrow (Green)
+      const currentSpeed = Math.hypot(labBall.vx, labBall.vy);
+      if (currentSpeed > 0.1) {
+        const velLen = Math.min(80, currentSpeed * 14);
+        const vxNorm = labBall.vx / currentSpeed;
+        const vyNorm = labBall.vy / currentSpeed;
+        drawArrow(
+          labCtx,
+          labBall.x,
+          labBall.y,
+          labBall.x + vxNorm * velLen,
+          labBall.y + vyNorm * velLen,
+          '#34d399',
+          '운동 방향'
+        );
+      }
+
+      // Applied Force Vector (Red)
+      if (inWindZone && labFan.forceMag > 1) {
+        const forceLen = labFan.forceMag * 4.5;
+        drawArrow(
+          labCtx,
+          labBall.x,
+          labBall.y,
+          labBall.x + fx * forceLen,
+          labBall.y + fy * forceLen,
+          '#f43f5e',
+          '작용하는 힘'
+        );
+      }
+
+      // Fan Graphic
+      drawInteractiveFan(labCtx, labFan);
+
+      requestAnimationFrame(labLoop);
+    }
+
+    function drawInteractiveFan(ctx, fan) {
+      const rad = (fan.angleDeg * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(fan.x, fan.y, fan.radius + 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(fan.x, fan.y, fan.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = labDraggingFan ? '#38bdf8' : '#64748b';
+      ctx.stroke();
+
+      const bladeSpin = (Date.now() / 60) % (Math.PI * 2);
+      ctx.save();
+      ctx.translate(fan.x, fan.y);
+      for (let b = 0; b < 4; b++) {
+        const bAngle = bladeSpin + (b * Math.PI / 2);
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(bAngle) * 11, Math.sin(bAngle) * 11, 10, 4.5, bAngle, 0, Math.PI * 2);
+        ctx.fillStyle = '#0284c7';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(0, 0, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fill();
+      ctx.restore();
+
+      const hx = fan.x + cos * fan.handleDist;
+      const hy = fan.y + sin * fan.handleDist;
+
+      ctx.beginPath();
+      ctx.moveTo(fan.x + cos * fan.radius, fan.y + sin * fan.radius);
+      ctx.lineTo(hx, hy);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(hx, hy, fan.rotateHandleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = labDraggingRotator ? '#38bdf8' : '#0284c7';
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#f8fafc';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 10px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('↻', hx, hy);
+      ctx.restore();
+    }
+
+    function drawArrow(ctx, fromx, fromy, tox, toy, color, label = '') {
+      const headlen = 10;
+      const dx = tox - fromx;
+      const dy = toy - fromy;
+      const angle = Math.atan2(dy, dx);
+
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+
+      ctx.beginPath();
+      ctx.moveTo(fromx, fromy);
+      ctx.lineTo(tox, toy);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(tox, toy);
+      ctx.lineTo(tox - headlen * Math.cos(angle - Math.PI / 6), toy - headlen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(tox - headlen * Math.cos(angle + Math.PI / 6), toy - headlen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+
+      if (label) {
+        ctx.font = 'bold 11px Pretendard, sans-serif';
+        const textMetrics = ctx.measureText(label);
+        const textW = textMetrics.width;
+
+        const perpX = -Math.sin(angle);
+        const perpY = Math.cos(angle);
+        const badgeDist = 18;
+        const lx = tox + Math.cos(angle) * 8 + perpX * badgeDist;
+        const ly = toy + Math.sin(angle) * 8 + perpY * badgeDist;
+
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(lx - 4, ly - 11, textW + 8, 16, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = color;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, lx, ly - 3);
+      }
+      ctx.restore();
+    }
+
+
+    /* ========================================================================
+       MODE 2: 포스 퍼즐 게임 (Force Puzzle Challenge - 최대 5대 & 5단계 검증 완료)
+       ======================================================================== */
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gameCtx = gameCanvas.getContext('2d');
+
+    let currentStageIndex = 0;
+    let gameLaunched = false;
+    let gameWon = false;
+
+    // 5단계 난이도 맵 구성 (모두 5대 이하로 클리어 가능한 유효 동선 검증 완료)
+    const stages = [
+      {
+        id: 1,
+        title: "1단계 (초급): 직각 코너링",
+        mission: "출발한 공이 벽에 닿기 전, 수직 힘을 가해 아래쪽 골대로 90도 꺾어 골인시키세요!",
+        detail: "필요 선풍기: 1~2대. 선풍기를 추가하고 각도를 수직(90°)으로 맞추어 배치해 보세요.",
+        ballStart: { x: 70, y: 110, vx: 3.5, vy: 0 },
+        goal: { x: 420, y: 280, w: 90, h: 80 },
+        walls: [
+          { x: 530, y: 0, w: 24, h: 360 },
+          { x: 220, y: 230, w: 140, h: 170 }
+        ]
+      },
+      {
+        id: 2,
+        title: "2단계 (중급): S자 연속 코너링",
+        mission: "장애물을 피해 아래로 꺾은 뒤, 다시 오른쪽으로 밀어 골대로 향하는 S자 궤적을 설계하세요!",
+        detail: "필요 선풍기: 2대. 첫 번째는 아래로(90°), 두 번째는 오른쪽(0°)으로 밀어보세요.",
+        ballStart: { x: 70, y: 90, vx: 3.2, vy: 0 },
+        goal: { x: 640, y: 310, w: 80, h: 70 },
+        walls: [
+          { x: 300, y: 0, w: 24, h: 220 },
+          { x: 480, y: 170, w: 24, h: 250 }
+        ]
+      },
+      {
+        id: 3,
+        title: "3단계 (고급): コ자형 3단 회랑",
+        mission: "중앙에 뻗은 장애물을 감싸 안듯이 위로, 오른쪽으로, 다시 아래로 3번 꺾어 골인시키세요!",
+        detail: "필요 선풍기: 3대. 수직 힘(위 270°, 오른쪽 0°, 아래 90°)의 방향 전환 조합을 적용하세요.",
+        ballStart: { x: 70, y: 220, vx: 3.2, vy: 0 },
+        goal: { x: 630, y: 240, w: 80, h: 80 },
+        walls: [
+          { x: 240, y: 130, w: 280, h: 25 },
+          { x: 240, y: 130, w: 25, h: 250 }
+        ]
+      },
+      {
+        id: 4,
+        title: "4단계 (심화): 중앙 장애물 우회",
+        mission: "중앙을 가로막는 두 개의 벽을 우회하여 오른쪽 상단 골대로 공을 인도하세요!",
+        detail: "선풍기 2~3대만으로 여유 있게 우회할 수 있도록 통로가 넓게 조정되었습니다. 아래(90°)와 오른쪽(0°), 위(270°) 방향을 활용하세요.",
+        ballStart: { x: 60, y: 90, vx: 2.2, vy: 0 },
+        goal: { x: 640, y: 70, w: 85, h: 85 },
+        walls: [
+          { x: 250, y: 0, w: 22, h: 180 },     // 하단 통로 폭을 200px 이상으로 대폭 확장
+          { x: 440, y: 160, w: 22, h: 260 }    // 상단 통로 폭을 160px 이상 확보
+        ]
+      },
+      {
+        id: 5,
+        title: "5단계 (마스터): 연속 관문 탈출",
+        mission: "적절한 위치에 선풍기를 배치해 장애물을 돌아 오른쪽 골대에 안착시키세요!",
+        detail: "선풍기 3~4대로 클리어 가능합니다. 회전 반경에 맞춰 위(270°), 오른쪽(0°), 아래(90°) 바람을 순서대로 놓아보세요.",
+        ballStart: { x: 60, y: 310, vx: 2.2, vy: 0 },
+        goal: { x: 640, y: 280, w: 85, h: 85 },
+        walls: [
+          { x: 240, y: 160, w: 22, h: 260 },   // 상단 우회 통로(160px) 넉넉히 확보
+          { x: 450, y: 0, w: 22, h: 200 }     // 하단 우회 통로(200px 이상) 넉넉히 확보
+        ]
+      }
+    ];
+
+    let gameBall = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      radius: 13,
+      history: []
+    };
+
+    let gameFans = []; // 학생이 추가할 선풍기 목록 (최대 5개)
+    let gameDraggingFanIndex = -1;
+    let gameDraggingRotatorIndex = -1;
+
+    function initGame() {
+      attachGameInteractions();
+      selectStage(1);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function selectStage(stageNum) {
+      currentStageIndex = stageNum - 1;
+      const stage = stages[currentStageIndex];
+      document.getElementById('gameStageNum').innerText = stage.id;
+      document.getElementById('gameStageTitle').innerText = stage.title;
+      document.getElementById('gameMissionDescription').innerText = stage.mission;
+      document.getElementById('gameStageDetail').innerText = stage.detail;
+
+      document.querySelectorAll('.stage-nav-btn').forEach((btn, idx) => {
+        if (idx === currentStageIndex) {
+          btn.className = 'stage-nav-btn px-2.5 py-1.5 rounded-lg border border-indigo-500 bg-indigo-600 text-white font-mono font-bold shadow';
+        } else {
+          btn.className = 'stage-nav-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 font-mono hover:border-slate-500';
+        }
+      });
+
+      gameFans = [];
+      updateFanCountUI();
+      resetGameStage();
+    }
+
+    /* 선풍기 추가하기 (최대 5개까지) */
+    function addGameFan() {
+      if (gameFans.length >= 5) {
+        playBeep(200, 'square', 0.15);
+        return;
+      }
+
+      const rect = gameCanvas.parentElement.getBoundingClientRect();
+      const spawnX = rect.width ? Math.min(rect.width - 70, 140 + gameFans.length * 70) : 160;
+      const spawnY = rect.height ? rect.height * 0.45 : 180;
+
+      // 힌트 없는 중립 기본 각도 (0도), 좁은 통로에서도 유연하게 쓸 수 있는 소형 컴팩트 규격
+      gameFans.push({
+        x: spawnX,
+        y: spawnY,
+        radius: 17,             // 기존 25 -> 17로 컴팩트화
+        rotateHandleRadius: 7,   // 노브 크기 축소
+        handleDist: 32,          // 회전 핸들 거리 46 -> 32로 축소
+        angleDeg: 0,
+        forceMag: 15,
+        windRange: 170,          // 바람 도달 거리는 동일하게 유지
+        windSpreadDeg: 55
+      });
+
+      playBeep(480, 'sine', 0.12);
+      updateFanCountUI();
+      resetGameStage();
+    }
+
+    function removeGameFan(idx) {
+      if (idx >= 0 && idx < gameFans.length) {
+        gameFans.splice(idx, 1);
+        playBeep(320, 'sine', 0.1);
+        updateFanCountUI();
+        resetGameStage();
+      }
+    }
+
+    function clearAllGameFans() {
+      if (gameFans.length === 0) return;
+      gameFans = [];
+      playBeep(260, 'sine', 0.1);
+      updateFanCountUI();
+      resetGameStage();
+    }
+
+    function updateFanCountUI() {
+      const badge = document.getElementById('fanCountBadge');
+      const addBtn = document.getElementById('addFanBtn');
+      if (badge) badge.innerText = `${gameFans.length} / 5대`;
+      if (addBtn) {
+        if (gameFans.length >= 5) {
+          addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          addBtn.disabled = true;
+        } else {
+          addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          addBtn.disabled = false;
+        }
+      }
+    }
+
+    function resetGameStage() {
+      const stage = stages[currentStageIndex];
+      gameLaunched = false;
+      gameWon = false;
+      gameBall.x = stage.ballStart.x;
+      gameBall.y = stage.ballStart.y;
+      gameBall.vx = stage.ballStart.vx;
+      gameBall.vy = stage.ballStart.vy;
+      gameBall.history = [];
+
+      document.getElementById('gameResultModal').classList.add('hidden');
+      const startBtn = document.getElementById('gameStartBtn');
+      startBtn.innerHTML = `<i class="ph-fill ph-paper-plane-tilt text-lg"></i><span>공 발사하기!</span>`;
+      startBtn.className = "px-5 py-2.5 rounded-xl font-bold bg-indigo-500 hover:bg-indigo-600 text-white flex items-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-95 transition";
+    }
+
+    function toggleGameLaunch() {
+      if (gameWon) {
+        resetGameStage();
+        return;
+      }
+      gameLaunched = !gameLaunched;
+      const btn = document.getElementById('gameStartBtn');
+      if (gameLaunched) {
+        btn.innerHTML = `<i class="ph-fill ph-arrow-counter-clockwise text-lg"></i><span>다시 발사</span>`;
+        btn.className = "px-5 py-2.5 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-white flex items-center gap-2 shadow-lg shadow-amber-500/20 active:scale-95 transition";
+        playBeep(600, 'sine', 0.15);
+      } else {
+        resetGameStage();
+      }
+    }
+
+    function attachGameInteractions() {
+      function getCanvasCoord(e) {
+        const rect = gameCanvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function onDown(e) {
+        if (gameLaunched) return;
+        const pos = getCanvasCoord(e);
+
+        // 1. Check delete button on fan (컴팩트 위치에 맞게 감지)
+        for (let i = gameFans.length - 1; i >= 0; i--) {
+          const fan = gameFans[i];
+          const delX = fan.x + 16;
+          const delY = fan.y - 16;
+          if (Math.hypot(pos.x - delX, pos.y - delY) <= 11) {
+            removeGameFan(i);
+            e.preventDefault();
+            return;
+          }
+        }
+
+        // 2. Check rotator handle knob hit
+        for (let i = gameFans.length - 1; i >= 0; i--) {
+          const fan = gameFans[i];
+          const rad = (fan.angleDeg * Math.PI) / 180;
+          const hx = fan.x + Math.cos(rad) * fan.handleDist;
+          const hy = fan.y + Math.sin(rad) * fan.handleDist;
+          if (Math.hypot(pos.x - hx, pos.y - hy) <= fan.rotateHandleRadius + 10) {
+            gameDraggingRotatorIndex = i;
+            e.preventDefault();
+            return;
+          }
+        }
+
+        // 3. Check fan body hit
+        for (let i = gameFans.length - 1; i >= 0; i--) {
+          const fan = gameFans[i];
+          if (Math.hypot(pos.x - fan.x, pos.y - fan.y) <= fan.radius + 6) {
+            gameDraggingFanIndex = i;
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+
+      function onMove(e) {
+        if (gameDraggingFanIndex === -1 && gameDraggingRotatorIndex === -1) return;
+        const pos = getCanvasCoord(e);
+        e.preventDefault();
+
+        if (gameDraggingRotatorIndex !== -1) {
+          const fan = gameFans[gameDraggingRotatorIndex];
+          const dx = pos.x - fan.x;
+          const dy = pos.y - fan.y;
+          let deg = Math.round((Math.atan2(dy, dx) * 180) / Math.PI);
+          if (deg < 0) deg += 360;
+
+          if (Math.abs(deg - 0) < 6 || Math.abs(deg - 360) < 6) deg = 0;
+          else if (Math.abs(deg - 90) < 6) deg = 90;
+          else if (Math.abs(deg - 180) < 6) deg = 180;
+          else if (Math.abs(deg - 270) < 6) deg = 270;
+
+          fan.angleDeg = deg;
+        } else if (gameDraggingFanIndex !== -1) {
+          const fan = gameFans[gameDraggingFanIndex];
+          const rect = gameCanvas.parentElement.getBoundingClientRect();
+          fan.x = Math.max(30, Math.min(rect.width - 30, pos.x));
+          fan.y = Math.max(30, Math.min(rect.height - 30, pos.y));
+        }
+      }
+
+      function onUp() {
+        gameDraggingFanIndex = -1;
+        gameDraggingRotatorIndex = -1;
+      }
+
+      gameCanvas.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+
+      gameCanvas.addEventListener('touchstart', onDown, { passive: false });
+      window.addEventListener('touchmove', onMove, { passive: false });
+      window.addEventListener('touchend', onUp);
+    }
+
+    function gameLoop() {
+      const rect = gameCanvas.parentElement.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
+      const stage = stages[currentStageIndex];
+
+      gameCtx.clearRect(0, 0, width, height);
+
+      // Grid
+      gameCtx.strokeStyle = 'rgba(51, 65, 85, 0.3)';
+      gameCtx.lineWidth = 1;
+      for (let x = 0; x < width; x += 40) {
+        gameCtx.beginPath();
+        gameCtx.moveTo(x, 0);
+        gameCtx.lineTo(x, height);
+        gameCtx.stroke();
+      }
+      for (let y = 0; y < height; y += 40) {
+        gameCtx.beginPath();
+        gameCtx.moveTo(0, y);
+        gameCtx.lineTo(width, y);
+        gameCtx.stroke();
+      }
+
+      // Walls
+      gameCtx.fillStyle = '#475569';
+      stage.walls.forEach(wall => {
+        gameCtx.beginPath();
+        gameCtx.roundRect(wall.x, wall.y, wall.w, wall.h, 6);
+        gameCtx.fill();
+        gameCtx.strokeStyle = '#64748b';
+        gameCtx.lineWidth = 2;
+        gameCtx.stroke();
+      });
+
+      // Goal
+      gameCtx.save();
+      gameCtx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      gameCtx.strokeStyle = '#10b981';
+      gameCtx.lineWidth = 3;
+      gameCtx.setLineDash([6, 4]);
+      gameCtx.beginPath();
+      gameCtx.roundRect(stage.goal.x, stage.goal.y, stage.goal.w, stage.goal.h, 12);
+      gameCtx.fill();
+      gameCtx.stroke();
+      gameCtx.restore();
+
+      gameCtx.fillStyle = '#34d399';
+      gameCtx.font = 'bold 12px Pretendard, sans-serif';
+      gameCtx.fillText("🎯 GOAL", stage.goal.x + 16, stage.goal.y + stage.goal.h / 2 + 4);
+
+      // Start Zone
+      gameCtx.strokeStyle = 'rgba(99, 102, 241, 0.4)';
+      gameCtx.setLineDash([4, 4]);
+      gameCtx.strokeRect(stage.ballStart.x - 25, stage.ballStart.y - 25, 50, 50);
+      gameCtx.setLineDash([]);
+      gameCtx.fillStyle = 'rgba(99, 102, 241, 0.8)';
+      gameCtx.font = '10px Pretendard';
+      gameCtx.fillText("출발", stage.ballStart.x - 10, stage.ballStart.y - 28);
+
+      // Fans in Game
+      gameFans.forEach((fan, idx) => {
+        const rad = (fan.angleDeg * Math.PI) / 180;
+        const halfSpread = (fan.windSpreadDeg / 2 * Math.PI) / 180;
+
+        gameCtx.save();
+        const coneGrad = gameCtx.createRadialGradient(
+          fan.x, fan.y, 10,
+          fan.x, fan.y, fan.windRange
+        );
+        coneGrad.addColorStop(0, 'rgba(56, 189, 248, 0.22)');
+        coneGrad.addColorStop(0.7, 'rgba(56, 189, 248, 0.08)');
+        coneGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+
+        gameCtx.fillStyle = coneGrad;
+        gameCtx.beginPath();
+        gameCtx.moveTo(fan.x, fan.y);
+        gameCtx.arc(fan.x, fan.y, fan.windRange, rad - halfSpread, rad + halfSpread);
+        gameCtx.closePath();
+        gameCtx.fill();
+
+        gameCtx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+        gameCtx.lineWidth = 1.6;
+        for (let i = 0; i < 3; i++) {
+          const arcDist = ((Date.now() / 8 + i * 45) % fan.windRange);
+          gameCtx.beginPath();
+          gameCtx.arc(fan.x, fan.y, arcDist, rad - halfSpread * 0.7, rad + halfSpread * 0.7);
+          gameCtx.stroke();
+        }
+        gameCtx.restore();
+
+        drawGameInteractiveFan(gameCtx, fan, idx);
+      });
+
+      // Ball Physics in Game
+      if (gameLaunched && !gameWon) {
+        gameFans.forEach(fan => {
+          const rad = (fan.angleDeg * Math.PI) / 180;
+          const toBallX = gameBall.x - fan.x;
+          const toBallY = gameBall.y - fan.y;
+          const ballDist = Math.hypot(toBallX, toBallY);
+
+          if (ballDist > 0 && ballDist <= fan.windRange + gameBall.radius) {
+            const ballAngle = Math.atan2(toBallY, toBallX);
+            let diffAngle = Math.abs(ballAngle - rad);
+            while (diffAngle > Math.PI) diffAngle = Math.abs(diffAngle - 2 * Math.PI);
+            const spreadRad = (fan.windSpreadDeg / 2 * Math.PI) / 180;
+
+            if (diffAngle <= spreadRad) {
+              const currentSpeed = Math.hypot(gameBall.vx, gameBall.vy);
+              if (currentSpeed > 0.001) {
+                const currentAngle = Math.atan2(gameBall.vy, gameBall.vx);
+                let delta = rad - currentAngle;
+                while (delta > Math.PI) delta -= 2 * Math.PI;
+                while (delta < -Math.PI) delta += 2 * Math.PI;
+
+                const absDeltaDeg = Math.abs(delta * 180 / Math.PI);
+                const fanAngleMod = fan.angleDeg % 360;
+                const isPerpendicularFan = (Math.abs(fanAngleMod - 90) <= 12) || (Math.abs(fanAngleMod - 270) <= 12);
+                const isOpposingWind = Math.cos(rad) < -0.15;
+
+                let fParallelCos = Math.cos(delta);
+                const fPerpSin = Math.sin(delta);
+
+                if (isPerpendicularFan || (absDeltaDeg >= 78 && absDeltaDeg <= 102)) {
+                  fParallelCos = 0;
+                } else if (isOpposingWind) {
+                  fParallelCos = Math.min(-0.25, Math.cos(rad));
+                }
+
+                let newSpeed = currentSpeed + fParallelCos * fan.forceMag * 0.008;
+                if (newSpeed < 0.5) newSpeed = 0.5;
+
+                const newAngle = currentAngle + fPerpSin * fan.forceMag * 0.0045;
+                gameBall.vx = Math.cos(newAngle) * newSpeed;
+                gameBall.vy = Math.sin(newAngle) * newSpeed;
+              }
+            }
+          }
+        });
+
+        gameBall.x += gameBall.vx;
+        gameBall.y += gameBall.vy;
+
+        if (Math.random() < 0.3) {
+          gameBall.history.push({ x: gameBall.x, y: gameBall.y });
+          if (gameBall.history.length > 25) gameBall.history.shift();
+        }
+
+        // Wall Collision
+        stage.walls.forEach(wall => {
+          if (
+            gameBall.x + gameBall.radius > wall.x &&
+            gameBall.x - gameBall.radius < wall.x + wall.w &&
+            gameBall.y + gameBall.radius > wall.y &&
+            gameBall.y - gameBall.radius < wall.y + wall.h
+          ) {
+            handleGameDefeat("벽에 충돌했습니다!", "선풍기 위치와 각도를 다시 조정하여 공이 안전하게 우회하도록 만드세요.");
+          }
+        });
+
+        // Out of bounds
+        if (gameBall.x < -30 || gameBall.x > width + 30 || gameBall.y < -30 || gameBall.y > height + 30) {
+          handleGameDefeat("코스를 이탈했습니다!", "바람의 방향을 골대 방향으로 알맞게 유도해 보세요.");
+        }
+
+        // Goal Check
+        if (
+          gameBall.x > stage.goal.x &&
+          gameBall.x < stage.goal.x + stage.goal.w &&
+          gameBall.y > stage.goal.y &&
+          gameBall.y < stage.goal.y + stage.goal.h
+        ) {
+          handleGameVictory();
+        }
+      }
+
+      // Ball Trail
+      gameBall.history.forEach((h, i) => {
+        gameCtx.beginPath();
+        gameCtx.arc(h.x, h.y, gameBall.radius - 3, 0, Math.PI * 2);
+        gameCtx.fillStyle = `rgba(245, 158, 11, ${(i / gameBall.history.length) * 0.4})`;
+        gameCtx.fill();
+      });
+
+      // Ball
+      gameCtx.save();
+      gameCtx.shadowColor = 'rgba(245, 158, 11, 0.6)';
+      gameCtx.shadowBlur = 10;
+      gameCtx.beginPath();
+      gameCtx.arc(gameBall.x, gameBall.y, gameBall.radius, 0, Math.PI * 2);
+      const bGrad = gameCtx.createRadialGradient(
+        gameBall.x - 3, gameBall.y - 3, 2,
+        gameBall.x, gameBall.y, gameBall.radius
+      );
+      bGrad.addColorStop(0, '#fef3c7');
+      bGrad.addColorStop(0.7, '#f59e0b');
+      bGrad.addColorStop(1, '#b45309');
+      gameCtx.fillStyle = bGrad;
+      gameCtx.fill();
+      gameCtx.restore();
+
+      const speed = Math.hypot(gameBall.vx, gameBall.vy);
+      if (speed > 0.2) {
+        drawArrow(
+          gameCtx,
+          gameBall.x,
+          gameBall.y,
+          gameBall.x + (gameBall.vx / speed) * 35,
+          gameBall.y + (gameBall.vy / speed) * 35,
+          '#10b981',
+          '운동'
+        );
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    /* Helper: Draw Interactive Fan for Game Mode (Body + Rotator Knob + Delete Button) */
+    function drawGameInteractiveFan(ctx, fan, idx) {
+      const rad = (fan.angleDeg * Math.PI) / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 8;
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(fan.x, fan.y, fan.radius + 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Fan Rim (소형화)
+      ctx.beginPath();
+      ctx.arc(fan.x, fan.y, fan.radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#1e293b';
+      ctx.fill();
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = (gameDraggingFanIndex === idx) ? '#6366f1' : '#64748b';
+      ctx.stroke();
+
+      // Spinning Blades (소형화)
+      const bladeSpin = (Date.now() / 60) % (Math.PI * 2);
+      ctx.save();
+      ctx.translate(fan.x, fan.y);
+      for (let b = 0; b < 4; b++) {
+        const bAngle = bladeSpin + (b * Math.PI / 2);
+        ctx.beginPath();
+        ctx.ellipse(Math.cos(bAngle) * 7, Math.sin(bAngle) * 7, 6.5, 3, bAngle, 0, Math.PI * 2);
+        ctx.fillStyle = '#6366f1';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(0, 0, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.restore();
+
+      // Direction Indicator Stem (거리 축소)
+      const hx = fan.x + cos * fan.handleDist;
+      const hy = fan.y + sin * fan.handleDist;
+
+      ctx.beginPath();
+      ctx.moveTo(fan.x + cos * fan.radius, fan.y + sin * fan.radius);
+      ctx.lineTo(hx, hy);
+      ctx.strokeStyle = '#818cf8';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Rotation Handle Knob (소형화)
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(hx, hy, fan.rotateHandleRadius, 0, Math.PI * 2);
+      ctx.fillStyle = (gameDraggingRotatorIndex === idx) ? '#a5b4fc' : '#4f46e5';
+      ctx.fill();
+      ctx.lineWidth = 1.8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('↻', hx, hy);
+      ctx.restore();
+
+      // Delete Button Badge (Top-Right, 소형화 & 밀착)
+      const delX = fan.x + 16;
+      const delY = fan.y - 16;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(delX, delY, 8, 0, Math.PI * 2);
+      ctx.fillStyle = '#e11d48';
+      ctx.fill();
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px Pretendard, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('✕', delX, delY);
+      ctx.restore();
+    }
+
+    function handleGameVictory() {
+      gameWon = true;
+      gameLaunched = false;
+      playBeep(659, 'triangle', 0.2);
+      setTimeout(() => playBeep(880, 'triangle', 0.35), 180);
+
+      const modal = document.getElementById('gameResultModal');
+      const icon = document.getElementById('modalIconWrap');
+      const title = document.getElementById('modalTitle');
+      const desc = document.getElementById('modalDesc');
+      const nextBtn = document.getElementById('modalNextBtn');
+
+      icon.className = 'w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center text-3xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-lg';
+      icon.innerHTML = '<i class="ph-bold ph-trophy"></i>';
+      title.innerText = '미션 성공! GOAL!';
+      title.className = 'text-xl font-bold mb-2 text-emerald-300';
+      desc.innerHTML = `스스로 설계한 힘의 방향으로 공을 정확히 골인시켰습니다!<br><b class="text-white">${stages[currentStageIndex].title}</b>을 완벽히 클리어했습니다.`;
+
+      if (currentStageIndex < stages.length - 1) {
+        nextBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.add('hidden');
+        title.innerText = '🎉 5단계 전 스테이지 마스터 달성!';
+        desc.innerHTML = `축하합니다! 힘이 작용할 때 물체의 속력과 방향 변화 원리를 완벽하게 마스터했습니다.`;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function handleGameDefeat(reason, guide) {
+      gameLaunched = false;
+      playBeep(180, 'sawtooth', 0.3);
+
+      const modal = document.getElementById('gameResultModal');
+      const icon = document.getElementById('modalIconWrap');
+      const title = document.getElementById('modalTitle');
+      const desc = document.getElementById('modalDesc');
+      const nextBtn = document.getElementById('modalNextBtn');
+
+      icon.className = 'w-16 h-16 mx-auto mb-3 rounded-2xl flex items-center justify-center text-3xl bg-rose-500/20 text-rose-400 border border-rose-500/40';
+      icon.innerHTML = '<i class="ph-bold ph-warning-circle"></i>';
+      title.innerText = reason;
+      title.className = 'text-xl font-bold mb-2 text-rose-400';
+      desc.innerHTML = `${guide}<br><span class="text-slate-400 text-[11px] mt-2 block">1단계 가상 실험실에서 확인했던 '나란한 힘'과 '수직인 힘'의 작용을 다시 기억해 보세요.</span>`;
+
+      nextBtn.classList.add('hidden');
+      modal.classList.remove('hidden');
+    }
+
+    function restartCurrentStage() {
+      document.getElementById('gameResultModal').classList.add('hidden');
+      resetGameStage();
+    }
+
+    function nextStage() {
+      if (currentStageIndex < stages.length - 1) {
+        selectStage(currentStageIndex + 2);
+      }
+    }
+
+    window.addEventListener('load', () => {
+      initLab();
+      initGame();
+      syncLabControlsDisplay();
+    });
+  </script>
+</body>
+</html>
